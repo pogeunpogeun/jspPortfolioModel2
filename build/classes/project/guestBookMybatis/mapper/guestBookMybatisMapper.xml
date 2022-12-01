@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="guestBookMybatis">
+<sql id="search">
+	<choose>
+			<when test="dto.searchGubun == 'name_content'">
+				and (name like '%' || #{dto.searchData} || '%' or content like '%' || #{dto.searchData} || '%')
+			</when>
+			<when test="dto.searchGubun != null and dto.searchGubun != '' and dto.searchData != null and dto.searchData != '' ">
+				and (${dto.searchGubun} like '%' || #{dto.searchData} || '%')
+			</when>
+			<otherwise>
+			
+			</otherwise>
+	</choose>
+</sql>
+	<select id="getTotalRecord" resultType="int">
+		select count(*) from ${tableName01} where 1 = 1
+		<include refid="search"></include>
+	</select>
+	<select id="getSelectAll" resultType="project.guestBookMybatis.model.dto.GuestBookMybatisDTO">
+		select * from (select A.*, Rownum rnum from (
+			select * from ${tableName01} where 1 = 1
+			<include refid="search"></include>
+		<![CDATA[
+			order by no desc
+			) A) where rnum >= #{dto.startRecord} and rnum <= #{dto.lastRecord}
+		]]>
+	</select>
+	<select id="getSelectOne" resultType="project.guestBookMybatis.model.dto.GuestBookMybatisDTO">
+		select * from ${tableName01} where no = #{dto.no} order by no desc
+	</select>
+	<insert id="setInsert">
+		insert into ${tableName01} (no, name, email, passwd, content, regiDate, memberNo) values
+		(seq_guestBook.nextval, #{dto.name}, #{dto.email}, #{dto.passwd}, #{dto.content}, sysdate, #{dto.memberNo})
+	</insert>
+	<update id="setUpdate">
+		update ${tableName01} set name = #{dto.name}, email = #{dto.email}, content = #{dto.content} where no = #{dto.no} and passwd = #{dto.passwd}
+	</update>
+	<delete id="setDelete">
+		delete from ${tableName01} where no = #{dto.no} and passwd = #{dto.passwd}
+	</delete>
+</mapper>

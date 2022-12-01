@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTO Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="memoMybatis">
+<sql id="search">
+	<choose>
+			<when test="dto.searchGubun == 'writer_content'">
+				and (writer like '%' || #{dto.searchData} || '%' or content like '%' || #{dto.searchData} || '%')
+			</when>
+			<when test="dto.searchGubun != null and dto.searchGubun != '' and dto.searchData != null and dto.searchData != '' ">
+				and (${dto.searchGubun} like '%' || #{dto.searchData} || '%')
+			</when>
+			<otherwise>
+			
+			</otherwise>
+	</choose>
+</sql>
+<select id="getTotalRecord" resultType="int">
+	select count(*) from ${tableName01} where 1 = 1
+	<include refid="search"></include>
+</select>
+<select id="getSelectAll" resultType="project.memoMybatis.model.dto.MemoMybatisDTO">
+	select * from (select A.*, Rownum rnum from(
+	
+		select * from ${tableName01} where 1 = 1
+		<include refid="search"></include>
+<![CDATA[
+			order by memoNo desc
+	) A) where rnum >= #{dto.startRecord} and rnum <= #{dto.lastRecord}
+]]>
+</select>
+<select id="getSelectOne" resultType="project.memoMybatis.model.dto.MemoMybatisDTO">
+	select * from ${tableName01} where memoNo = #{dto.memoNo}
+</select>
+<insert id="setInsert">
+	insert into ${tableName01} (memoNo, subject, writer, content, regiDate) values
+	(seq_memo.nextval, #{dto.subject}, #{dto.writer}, #{dto.content}, sysdate)
+</insert>
+<update id="setUpdate">
+	update ${tableName01} set subject = #{dto.subject}, content = #{dto.content} where memoNo = #{dto.memoNo}
+</update>
+<delete id="setDelete">
+	delete from ${tableName01} where memoNo = #{dto.memoNo}
+</delete>
+</mapper>
